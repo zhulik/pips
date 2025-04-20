@@ -42,9 +42,8 @@ func MapDChan[I any, O any](ctx context.Context, input <-chan D[I], h Subscripti
 	out := make(chan D[O])
 
 	go func() {
-		defer close(out)
-
 		MapToDChan(ctx, input, out, h)
+		close(out)
 	}()
 
 	return out

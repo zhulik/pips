@@ -11,47 +11,35 @@ type batchStage struct {
 }
 
 func (s batchStage) Run(ctx context.Context, input <-chan pips.D[any]) <-chan pips.D[any] {
-	batchChan := make(chan pips.D[any])
-
-	buffer := make([]any, 0, s.size)
-
-	sendReset := func() {
-		if len(buffer) == 0 {
-			return
-		}
-
-		batchChan <- pips.AnyD(buffer)
-		buffer = make([]any, 0, s.size)
-	}
+	output := make(chan pips.D[any])
 
 	go func() {
-		defer close(batchChan)
+		defer close(output)
+
+		buffer := make([]any, 0, s.size)
+
+		sendReset := func() {
+			if len(buffer) == 0 {
+				return
+			}
+
+			output <- pips.AnyD(buffer)
+			buffer = make([]any, 0, s.size)
+		}
+
 		defer sendReset()
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
+		pips.MapToDChan(ctx, input, output, func(_ context.Context, item any, _ chan<- pips.D[any]) error {
+			buffer = append(buffer, item)
 
-			case res, ok := <-input:
-				if !ok {
-					return
-				}
-				item, err := res.Unpack()
-				if err != nil {
-					batchChan <- pips.ErrD[any](err)
-					return
-				}
-				buffer = append(buffer, item)
-
-				if len(buffer) >= s.size {
-					sendReset()
-				}
+			if len(buffer) >= s.size {
+				sendReset()
 			}
-		}
+			return nil
+		})
 	}()
 
-	return batchChan
+	return output
 }
 
 func Batch(batchSize int) pips.Stage {
