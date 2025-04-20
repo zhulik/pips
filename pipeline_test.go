@@ -18,6 +18,10 @@ var (
 		return len(s), nil
 	})
 
+	nothingMap = apply.Map(func(_ context.Context, s []int) ([]int, error) {
+		return s, nil
+	})
+
 	gt6Filter = apply.Filter(func(_ context.Context, i int) (bool, error) {
 		return i > 6, nil
 	})
@@ -30,7 +34,8 @@ func TestPipeline(t *testing.T) {
 		Then(subPipe).
 		Then(lenMap).
 		Then(apply.Batch(3)).
-		Then(apply.Flatten()).
+		Then(nothingMap).
+		Then(apply.Flatten[int]()).
 		Then(gt6Filter).
 		Run(t.Context(), testhelpers.InputChan())
 
