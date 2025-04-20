@@ -1,7 +1,6 @@
-package pips_test
+package testhelpers
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,11 +8,7 @@ import (
 	"github.com/zhulik/pips"
 )
 
-var (
-	errTest = errors.New("test error")
-)
-
-func readAll[T any](ch <-chan T) []T {
+func ReadAll[T any](ch <-chan T) []T {
 	collection := []T{}
 
 	for item := range ch {
@@ -33,26 +28,34 @@ func Map[T any, R any](collection []T, iteratee func(item T, index int) R) []R {
 	return result
 }
 
-func inputChan() <-chan pips.D[string] {
-	ch := make(chan pips.D[string])
+func InputChan() <-chan pips.D[any] {
+	ch := make(chan pips.D[any])
+
 	go func() {
-		ch <- pips.NewD("test")
-		ch <- pips.NewD("foo")
-		ch <- pips.NewD("bazz")
-		ch <- pips.NewD("train")
+		ch <- pips.AnyD("test")
+		ch <- pips.AnyD("foo")
+		ch <- pips.AnyD("bazz")
+		ch <- pips.AnyD("train")
 		close(ch)
 	}()
+
 	return ch
 }
 
-func testPipeline(t *testing.T, stages ...pips.Stage) <-chan pips.D[string] {
+func TestStage(t *testing.T, stage pips.Stage) <-chan pips.D[any] {
 	t.Helper()
 
-	return pips.New[string, string](stages...).Run(t.Context(), inputChan())
+	out := make(chan pips.D[any])
+	go func() {
+		stage.Run(t.Context(), InputChan(), out)
+		close(out)
+	}()
+
+	return out
 }
 
-func requireSuccessfulPiping[T any](t *testing.T, out <-chan pips.D[T], expected []T) {
-	collected := readAll(out)
+func RequireSuccessfulPiping[T any](t *testing.T, out <-chan pips.D[T], expected []T) {
+	collected := ReadAll(out)
 
 	require.Equal(t, expected,
 		Map(collected, func(item pips.D[T], _ int) T {
@@ -62,8 +65,8 @@ func requireSuccessfulPiping[T any](t *testing.T, out <-chan pips.D[T], expected
 	)
 }
 
-func requireErroredPiping[T any](t *testing.T, out <-chan pips.D[T], err error) {
-	collected := readAll(out)
+func RequireErroredPiping[T any](t *testing.T, out <-chan pips.D[T], err error) {
+	collected := ReadAll(out)
 
 	require.Len(t, collected, 1)
 	require.ErrorIs(t, collected[0].Error(), err)

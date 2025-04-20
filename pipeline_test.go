@@ -6,10 +6,13 @@ import (
 
 	"github.com/zhulik/pips"
 	"github.com/zhulik/pips/apply"
+	"github.com/zhulik/pips/testhelpers"
 )
 
 var (
-	subPipe = apply.Pipeline(pips.New[string, string](duplicateMap))
+	subPipe = apply.Pipeline(pips.New[string, string](apply.Map(func(_ context.Context, s string) (string, error) {
+		return s + s, nil
+	})))
 
 	lenMap = apply.Map(func(_ context.Context, s string) (int, error) {
 		return len(s), nil
@@ -23,13 +26,13 @@ var (
 func TestPipeline(t *testing.T) {
 	t.Parallel()
 
-	out := pips.New[string, int]().
+	out := pips.New[any, int]().
 		Then(subPipe).
 		Then(lenMap).
 		Then(apply.Batch(3)).
 		Then(apply.Flatten()).
 		Then(gt6Filter).
-		Run(t.Context(), inputChan())
+		Run(t.Context(), testhelpers.InputChan())
 
-	requireSuccessfulPiping(t, out, []int{8, 8, 10})
+	testhelpers.RequireSuccessfulPiping(t, out, []int{8, 8, 10})
 }
