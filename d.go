@@ -1,8 +1,14 @@
 package pips
 
-type D[T any] interface {
-	Unpack() (T, error)
+type RawD interface {
+	RawUnpack() (any, error)
+	RawValue() any
+}
 
+type D[T any] interface {
+	RawD
+
+	Unpack() (T, error)
 	Value() T
 	Error() error
 }
@@ -28,12 +34,20 @@ func CastD[I any, O any](d D[I]) D[O] {
 }
 
 type pd[T any] struct {
-	value T
+	value any
 	error error
 }
 
-func (r pd[T]) Value() T {
+func (r pd[T]) RawUnpack() (any, error) {
+	return r.value, r.error
+}
+
+func (r pd[T]) RawValue() any {
 	return r.value
+}
+
+func (r pd[T]) Value() T {
+	return r.value.(T)
 }
 
 func (r pd[T]) Error() error {
@@ -41,5 +55,5 @@ func (r pd[T]) Error() error {
 }
 
 func (r pd[T]) Unpack() (T, error) {
-	return r.value, r.error
+	return r.Value(), r.error
 }
