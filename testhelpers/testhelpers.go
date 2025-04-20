@@ -45,9 +45,24 @@ func InputChan() <-chan pips.D[any] {
 func TestStage(t *testing.T, stage pips.Stage) <-chan pips.D[any] {
 	t.Helper()
 
+	return TestStageWith(t, stage, []any{"test", "foo", "bazz", "train"})
+}
+
+func TestStageWith(t *testing.T, stage pips.Stage, items []any) <-chan pips.D[any] {
+	t.Helper()
+
+	ch := make(chan pips.D[any])
+
+	go func() {
+		for _, item := range items {
+			ch <- pips.AnyD(item)
+		}
+		close(ch)
+	}()
+
 	out := make(chan pips.D[any])
 	go func() {
-		stage.Run(t.Context(), InputChan(), out)
+		stage.Run(t.Context(), ch, out)
 		close(out)
 	}()
 
