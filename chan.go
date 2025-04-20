@@ -44,28 +44,31 @@ func MapDChan[I any, O any](ctx context.Context, input <-chan D[I], h Subscripti
 	go func() {
 		defer close(out)
 
-		for {
-			select {
-			case <-ctx.Done():
-				return
-
-			case res, ok := <-input:
-				if !ok {
-					return
-				}
-				if res.Error() != nil {
-					out <- ErrD[O](res.Error())
-					return
-				}
-
-				err := h(ctx, res.Value(), out)
-				if err != nil {
-					out <- ErrD[O](err)
-					return
-				}
-			}
-		}
+		MapToDChan(ctx, input, out, h)
 	}()
 
 	return out
+}
+
+func MapToDChan[I any, O any](ctx context.Context, input <-chan D[I], output chan<- D[O], h SubscriptionHandler[I, O]) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case res, ok := <-input:
+			if !ok {
+				return
+			}
+			if res.Error() != nil {
+				panic(res.Error()) // Must never happen
+			}
+
+			err := h(ctx, res.Value(), output)
+			if err != nil {
+				output <- ErrD[O](err)
+				return
+			}
+		}
+	}
 }
