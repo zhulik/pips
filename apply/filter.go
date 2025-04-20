@@ -10,17 +10,16 @@ type filterStage[T any] struct {
 	filter func(context.Context, T) (bool, error)
 }
 
-func (s filterStage[I]) Run(ctx context.Context, input <-chan pips.D[any]) <-chan pips.D[any] {
-	return pips.MapDChan(ctx, input, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
+func (s filterStage[I]) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
+	pips.MapToDChan(ctx, input, output, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
 		keep, err := s.filter(ctx, item.(I))
 		if err != nil {
 			return err
 		}
-		if !keep {
-			return nil
+		if keep {
+			out <- pips.NewD(item)
 		}
 
-		out <- pips.NewD(item)
 		return nil
 	})
 }

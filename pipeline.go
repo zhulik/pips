@@ -6,10 +6,10 @@ import (
 
 // Stage is a unit of work in the pipeline.
 type Stage interface {
-	// Run is supposed to start a new goroutine which consumes from the input channel and produces to the
-	// output channel. The stage is responsible for closing the output channel.
-	// The stage finishes when the context is canceled or the input channel is closed.
-	Run(context.Context, <-chan D[any]) <-chan D[any]
+	// Run should consume from the input channel and produce to the
+	// output channel. The stage must not close channels, must block.
+	// When using background routines: they must exit when the context is canceled or the input channel is closed.
+	Run(context.Context, <-chan D[any], chan<- D[any])
 }
 
 // Pipeline is a sequence of stages.
@@ -32,15 +32,18 @@ func (p *Pipeline[I, O]) Then(stages ...Stage) *Pipeline[I, O] {
 func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) <-chan D[O] {
 	inChan := CastDChan[I, any](ctx, input)
 
-	var prevOut <-chan D[any]
-
-	prevOut = inChan
-
 	for _, stage := range p.stages {
-		prevOut = stage.Run(ctx, prevOut)
+		newOut := make(chan D[any])
+
+		go p.runStage(ctx, stage, inChan, newOut)
+
+		inChan = newOut
 	}
 
-	outCh := CastDChan[any, O](ctx, prevOut)
+	return CastDChan[any, O](ctx, inChan)
+}
 
-	return outCh
+func (p *Pipeline[I, O]) runStage(ctx context.Context, stage Stage, in <-chan D[any], out chan<- D[any]) {
+	stage.Run(ctx, in, out)
+	close(out)
 }

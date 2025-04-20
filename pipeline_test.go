@@ -2,7 +2,6 @@ package pips_test
 
 import (
 	"context"
-	"log"
 	"testing"
 
 	"github.com/zhulik/pips"
@@ -24,7 +23,7 @@ var (
 func TestPipeline(t *testing.T) {
 	t.Parallel()
 
-	res := pips.New[string, int]().
+	out := pips.New[string, int]().
 		Then(subPipe).
 		Then(lenMap).
 		Then(apply.Batch(3)).
@@ -32,7 +31,5 @@ func TestPipeline(t *testing.T) {
 		Then(gt6Filter).
 		Run(t.Context(), inputChan())
 
-	for m := range res {
-		log.Println(m.Unpack())
-	}
+	requireSuccessfulPiping(t, out, []int{8, 8, 10})
 }

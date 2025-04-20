@@ -10,8 +10,16 @@ type pipelineStage[I any, O any] struct {
 	pipeline *pips.Pipeline[I, O]
 }
 
-func (p pipelineStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any]) <-chan pips.D[any] {
-	return pips.CastDChan[O, any](ctx, p.pipeline.Run(ctx, pips.CastDChan[any, I](ctx, input)))
+func (p pipelineStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
+	pips.MapToDChan(
+		ctx,
+		p.pipeline.Run(ctx, pips.CastDChan[any, I](ctx, input)),
+		output,
+		func(_ context.Context, item O, out chan<- pips.D[any]) error {
+			out <- pips.AnyD(item)
+			return nil
+		},
+	)
 }
 
 func Pipeline[I any, O any](pipeline *pips.Pipeline[I, O]) pips.Stage {
