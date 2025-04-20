@@ -10,6 +10,7 @@ type pipelineStage[I any, O any] struct {
 	pipeline *pips.Pipeline[I, O]
 }
 
+// Run runs the pipeline and sends the output to the output channel.
 func (p pipelineStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
 	pips.MapToDChan(
 		ctx,
@@ -22,6 +23,7 @@ func (p pipelineStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any], 
 	)
 }
 
+// Pipeline creates a pipeline stage.
 func Pipeline[I any, O any](pipeline *pips.Pipeline[I, O]) pips.Stage {
 	return pipelineStage[I, O]{pipeline}
 }

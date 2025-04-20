@@ -10,6 +10,7 @@ type batchStage struct {
 	size int
 }
 
+// Run batches items from the input channel into batches of the given size and sends them to the output channel.
 func (s batchStage) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
 	buffer := make([]any, 0, s.size)
 
@@ -32,6 +33,7 @@ func (s batchStage) Run(ctx context.Context, input <-chan pips.D[any], output ch
 	})
 }
 
+// Batch creates a batching stage.
 func Batch(batchSize int) pips.Stage {
 	return batchStage{batchSize}
 }
