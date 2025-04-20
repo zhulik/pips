@@ -31,8 +31,7 @@ func MapToDChan[I any, O any](ctx context.Context, input <-chan D[I], output cha
 				return
 			}
 			if res.Error() != nil {
-				output <- ErrD[O](res.Error())
-				return
+				panic(res.Error()) // should never happen
 			}
 
 			err := h(ctx, res.Value(), output)
