@@ -38,7 +38,7 @@ func MapToChan[I any, O any](ctx context.Context, input <-chan I, output chan<- 
 
 type SubscriptionHandler[T any, O any] func(ctx context.Context, item T, out chan<- D[O]) error
 
-func MapToDChan[I any, O any](ctx context.Context, input <-chan D[I], h SubscriptionHandler[I, O]) <-chan D[O] {
+func MapDChan[I any, O any](ctx context.Context, input <-chan D[I], h SubscriptionHandler[I, O]) <-chan D[O] {
 	out := make(chan D[O])
 
 	go func() {

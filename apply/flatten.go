@@ -10,7 +10,7 @@ type flattenStage struct {
 }
 
 func (f flattenStage) Run(ctx context.Context, input <-chan pips.D[any]) <-chan pips.D[any] {
-	return pips.MapToDChan(ctx, input, func(_ context.Context, item any, out chan<- pips.D[any]) error {
+	return pips.MapDChan(ctx, input, func(_ context.Context, item any, out chan<- pips.D[any]) error {
 		for _, item := range item.([]any) {
 			out <- pips.NewD(item)
 		}
