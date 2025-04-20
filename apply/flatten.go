@@ -10,12 +10,8 @@ type flattenStage struct {
 }
 
 func (f flattenStage) Run(ctx context.Context, input <-chan pips.D[any]) <-chan pips.D[any] {
-	return Subscriber(ctx, input, func(_ context.Context, item pips.D[any], out chan<- pips.D[any]) error {
-		ary, err := item.Unpack()
-		if err != nil {
-			return err
-		}
-		for _, item := range ary.([]any) {
+	return pips.MapToDChan(ctx, input, func(_ context.Context, item any, out chan<- pips.D[any]) error {
+		for _, item := range item.([]any) {
 			out <- pips.NewD(item)
 		}
 		return nil

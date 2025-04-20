@@ -11,8 +11,8 @@ type mapStage[I any, O any] struct {
 }
 
 func (m mapStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any]) <-chan pips.D[any] {
-	return Subscriber(ctx, input, func(ctx context.Context, item pips.D[any], out chan<- pips.D[any]) error {
-		res, err := m.mapper(ctx, item.Value().(I))
+	return pips.MapToDChan(ctx, input, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
+		res, err := m.mapper(ctx, item.(I))
 		if err != nil {
 			return err
 		}

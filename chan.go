@@ -35,3 +35,37 @@ func MapToChan[I any, O any](ctx context.Context, input <-chan I, output chan<- 
 		}
 	}
 }
+
+type SubscriptionHandler[T any, O any] func(ctx context.Context, item T, out chan<- D[O]) error
+
+func MapToDChan[I any, O any](ctx context.Context, input <-chan D[I], h SubscriptionHandler[I, O]) <-chan D[O] {
+	out := make(chan D[O])
+
+	go func() {
+		defer close(out)
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case res, ok := <-input:
+				if !ok {
+					return
+				}
+				if res.Error() != nil {
+					out <- ErrD[O](res.Error())
+					return
+				}
+
+				err := h(ctx, res.Value(), out)
+				if err != nil {
+					out <- ErrD[O](err)
+					return
+				}
+			}
+		}
+	}()
+
+	return out
+}

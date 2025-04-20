@@ -26,16 +26,15 @@ func (s batchStage) Run(ctx context.Context, input <-chan pips.D[any]) <-chan pi
 
 	go func() {
 		defer close(batchChan)
+		defer sendReset()
 
 		for {
 			select {
 			case <-ctx.Done():
-				sendReset()
 				return
 
 			case res, ok := <-input:
 				if !ok {
-					sendReset()
 					return
 				}
 				item, err := res.Unpack()

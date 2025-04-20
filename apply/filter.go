@@ -11,8 +11,8 @@ type filterStage[T any] struct {
 }
 
 func (s filterStage[I]) Run(ctx context.Context, input <-chan pips.D[any]) <-chan pips.D[any] {
-	return Subscriber(ctx, input, func(ctx context.Context, item pips.D[any], out chan<- pips.D[any]) error {
-		keep, err := s.filter(ctx, item.Value().(I))
+	return pips.MapToDChan(ctx, input, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
+		keep, err := s.filter(ctx, item.(I))
 		if err != nil {
 			return err
 		}
@@ -20,7 +20,7 @@ func (s filterStage[I]) Run(ctx context.Context, input <-chan pips.D[any]) <-cha
 			return nil
 		}
 
-		out <- item
+		out <- pips.NewD(item)
 		return nil
 	})
 }
