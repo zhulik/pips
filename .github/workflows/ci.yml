@@ -47,3 +47,5 @@ jobs:
     needs:
       - lint
       - test
+    steps:
+      - run: echo ok
