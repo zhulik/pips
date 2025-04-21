@@ -27,7 +27,7 @@ var (
 	})
 )
 
-func TestPipeline(t *testing.T) {
+func TestPipeline_Result(t *testing.T) {
 	t.Parallel()
 
 	out := pips.New[any, int]().
@@ -40,4 +40,16 @@ func TestPipeline(t *testing.T) {
 		Run(t.Context(), testhelpers.InputChan())
 
 	testhelpers.RequireSuccessfulPiping(t, out, []int{8, 8, 10})
+}
+
+func TestPipeline_NoResult(t *testing.T) {
+	t.Parallel()
+
+	out := pips.New[any, any]().
+		Then(apply.Map[string, any](func(_ context.Context, _ string) (any, error) {
+			return nil, nil
+		})).
+		Run(t.Context(), testhelpers.InputChan())
+
+	testhelpers.RequireSuccessfulPiping(t, out, []any{nil, nil, nil, nil})
 }

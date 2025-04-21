@@ -35,7 +35,12 @@ func CastD[I any, O any](d D[I]) D[O] {
 	if d.Error() != nil {
 		return ErrD[O](d.Error())
 	}
-	return NewD(any(d.Value()).(O))
+	v := any(d.Value())
+	if v == nil {
+		var t O
+		return NewD(t)
+	}
+	return NewD(v.(O))
 }
 
 type pd[T any] struct {
@@ -52,6 +57,10 @@ func (r pd[T]) RawValue() any {
 }
 
 func (r pd[T]) Value() T {
+	if r.value == nil {
+		var t T
+		return t
+	}
 	return r.value.(T)
 }
 
