@@ -51,7 +51,7 @@ func main() {
 		apply.Filter(func(ctx context.Context, n int) (bool, error) {
 			return n%2 == 0, nil // Keep only even numbers
 		}),
-		apply.Batch(3),
+		apply.Batch[int](3),
 	)
 
 	// Run the pipeline
@@ -111,7 +111,7 @@ Group items for bulk processing, such as batch database inserts:
 
 ```go
 pipeline := pips.New[User, []User](
-    apply.Batch(100), // Group users in batches of 100
+    apply.Batch[User](100), // Group users in batches of 100
 )
 ```
 
