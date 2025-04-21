@@ -4,6 +4,48 @@ import (
 	"context"
 )
 
+type OutChan[T any] <-chan D[T]
+
+func (o OutChan[T]) Collect(ctx context.Context) ([]T, error) {
+	var res []T
+
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break loop
+		case r, ok := <-o:
+			if !ok {
+				break loop
+			}
+			if r.Error() != nil {
+				return nil, r.Error()
+			}
+			res = append(res, r.Value())
+		}
+	}
+
+	return res, nil
+}
+
+func (o OutChan[T]) Wait(ctx context.Context) error {
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break loop
+		case r, ok := <-o:
+			if !ok {
+				break loop
+			}
+			if r.Error() != nil {
+				return r.Error()
+			}
+		}
+	}
+	return nil
+}
+
 func MapInputChan[I any, O any](ctx context.Context, ch <-chan I, f func(context.Context, I) (O, error)) <-chan D[O] {
 	input := make(chan D[O])
 

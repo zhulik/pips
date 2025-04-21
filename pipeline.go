@@ -29,7 +29,7 @@ func (p *Pipeline[I, O]) Then(stages ...Stage) *Pipeline[I, O] {
 }
 
 // Run runs the pipeline in the background.
-func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) <-chan D[O] {
+func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) OutChan[O] {
 	inChan := CastDChan[I, any](ctx, input)
 
 	for _, stage := range p.stages {

@@ -8,26 +8,6 @@ import (
 	"github.com/zhulik/pips"
 )
 
-func ReadAll[T any](ch <-chan T) []T {
-	collection := []T{}
-
-	for item := range ch {
-		collection = append(collection, item)
-	}
-
-	return collection
-}
-
-func Map[T any, R any](collection []T, iteratee func(item T, index int) R) []R {
-	result := make([]R, len(collection))
-
-	for i := range collection {
-		result[i] = iteratee(collection[i], i)
-	}
-
-	return result
-}
-
 func InputChan() <-chan pips.D[any] {
 	ch := make(chan pips.D[any])
 
@@ -69,20 +49,17 @@ func TestStageWith(t *testing.T, stage pips.Stage, items []any) <-chan pips.D[an
 	return out
 }
 
-func RequireSuccessfulPiping[T any](t *testing.T, out <-chan pips.D[T], expected []T) {
-	collected := ReadAll(out)
+func RequireSuccessfulPiping[T any](t *testing.T, out pips.OutChan[T], expected []T) {
+	t.Helper()
 
-	require.Equal(t, expected,
-		Map(collected, func(item pips.D[T], _ int) T {
-			require.NoError(t, item.Error())
-			return item.Value()
-		}),
-	)
+	collected, err := out.Collect(t.Context())
+	require.NoError(t, err)
+
+	require.Equal(t, expected, collected)
 }
 
-func RequireErroredPiping[T any](t *testing.T, out <-chan pips.D[T], err error) {
-	collected := ReadAll(out)
+func RequireErroredPiping[T any](t *testing.T, out pips.OutChan[T], expected error) {
+	_, err := out.Collect(t.Context())
 
-	require.Len(t, collected, 1)
-	require.ErrorIs(t, collected[0].Error(), err)
+	require.ErrorIs(t, err, expected)
 }
