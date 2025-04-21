@@ -4,16 +4,12 @@ import (
 	"context"
 )
 
-func MapInputChan[I any, O any](ctx context.Context, ch <-chan I, f func(context.Context, I) (D[O], error)) <-chan D[O] {
+func MapInputChan[I any, O any](ctx context.Context, ch <-chan I, f func(context.Context, I) (O, error)) <-chan D[O] {
 	input := make(chan D[O])
 
 	go func() {
 		for r := range ch {
-			res, err := f(ctx, r)
-			if err != nil {
-				input <- ErrD[O](err)
-			}
-			input <- NewD(res.Value())
+			input <- NewD(f(ctx, r))
 		}
 		close(input)
 	}()

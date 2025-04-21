@@ -17,8 +17,13 @@ func AnyD[T any](value T) D[any] {
 	return NewD[any](value)
 }
 
-func NewD[T any](value T) D[T] {
-	return pd[T]{value, nil}
+func NewD[T any](value T, err ...error) D[T] {
+	pdt := pd[T]{value, nil}
+	if len(err) > 0 {
+		pdt.error = err[0]
+	}
+
+	return pdt
 }
 
 func ErrD[T any](err error) D[T] {
