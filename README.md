@@ -18,6 +18,7 @@ go get github.com/zhulik/pips
   - Filter: Keep only items that match a predicate
   - Batch: Group items into batches of a specified size
   - Flatten: Expand slices into individual items
+  - Each: Apply a function to each item without changing the item
 
 ## Basic Usage
 
@@ -122,6 +123,20 @@ Process nested collections by flattening them:
 ```go
 pipeline := pips.New[[]int, int](
     apply.Flatten[int](),
+)
+```
+
+### Side Effects with Each
+
+Perform side effects on each item without changing the data flow:
+
+```go
+pipeline := pips.New[User, User](
+    apply.Each(func(ctx context.Context, user User) error {
+        // Log user information
+        log.Printf("Processing user: %s", user.Name)
+        return nil
+    }),
 )
 ```
 
