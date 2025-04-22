@@ -19,6 +19,7 @@ go get github.com/zhulik/pips
   - Batch: Group items into batches of a specified size
   - Flatten: Expand slices into individual items
   - Each: Apply a function to each item without changing the item
+  - Zip: Transform items and pair the results with the original items
 
 ## Basic Usage
 
@@ -138,6 +139,30 @@ pipeline := pips.New[User, User](
         return nil
     }),
 )
+```
+
+### Pairing Original and Transformed Data with Zip
+
+Transform items while keeping the original data paired with the result:
+
+```go
+pipeline := pips.New[string, pips.P[string, int]](
+    apply.Zip(func(ctx context.Context, s string) (int, error) {
+        return strconv.Atoi(s)
+    }),
+)
+
+// Later, access both the original string and the parsed integer
+for item := range output {
+    pair, err := item.Unpack()
+    if err != nil {
+        fmt.Printf("Error: %v\n", err)
+        continue
+    }
+
+    original, parsed := pair.Unpack()
+    fmt.Printf("Original: %s, Parsed: %d\n", original, parsed)
+}
 ```
 
 ## Error Handling
