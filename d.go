@@ -1,13 +1,7 @@
 package pips
 
-type RawD interface {
-	RawUnpack() (any, error)
-	RawValue() any
-}
-
+// D is a pair of value and error, represents a piece of data in the pipeline.
 type D[T any] interface {
-	RawD
-
 	Unpack() (T, error)
 	Value() T
 	Error() error
@@ -18,9 +12,9 @@ func AnyD[T any](value T) D[any] {
 }
 
 func NewD[T any](value T, err ...error) D[T] {
-	pdt := pd[T]{value, nil}
+	pdt := pd[T]{pp[T, error]{value, nil}}
 	if len(err) > 0 {
-		pdt.error = err[0]
+		pdt.p.b = err[0]
 	}
 
 	return pdt
@@ -28,7 +22,7 @@ func NewD[T any](value T, err ...error) D[T] {
 
 func ErrD[T any](err error) D[T] {
 	var t T
-	return pd[T]{t, err}
+	return pd[T]{pp[T, error]{t, err}}
 }
 
 func CastD[I any, O any](d D[I]) D[O] {
@@ -44,30 +38,17 @@ func CastD[I any, O any](d D[I]) D[O] {
 }
 
 type pd[T any] struct {
-	value any
-	error error
-}
-
-func (r pd[T]) RawUnpack() (any, error) {
-	return r.value, r.error
-}
-
-func (r pd[T]) RawValue() any {
-	return r.value
+	p pp[T, error]
 }
 
 func (r pd[T]) Value() T {
-	if r.value == nil {
-		var t T
-		return t
-	}
-	return r.value.(T)
+	return r.p.a
 }
 
 func (r pd[T]) Error() error {
-	return r.error
+	return r.p.b
 }
 
 func (r pd[T]) Unpack() (T, error) {
-	return r.Value(), r.error
+	return r.p.Unpack()
 }
