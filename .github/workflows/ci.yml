@@ -24,9 +24,6 @@ jobs:
           version: latest
           args: --timeout=5m
 
-      - name: Lint
-        run: golangci-lint run
-
   test:
     name: Test
     runs-on: ubuntu-latest
