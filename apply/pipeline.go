@@ -6,24 +6,17 @@ import (
 	"github.com/zhulik/pips"
 )
 
-type pipelineStage[I any, O any] struct {
-	pipeline *pips.Pipeline[I, O]
-}
-
-// Run runs the pipeline and sends the output to the output channel.
-func (p pipelineStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
-	pips.MapToDChan(
-		ctx,
-		p.pipeline.Run(ctx, pips.CastDChan[any, I](ctx, input)),
-		output,
-		func(_ context.Context, item O, out chan<- pips.D[any]) error {
-			out <- pips.AnyD(item)
-			return nil
-		},
-	)
-}
-
 // Pipeline creates a pipeline stage.
 func Pipeline[I any, O any](pipeline *pips.Pipeline[I, O]) pips.Stage {
-	return pipelineStage[I, O]{pipeline}
+	return func(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
+		pips.MapToDChan(
+			ctx,
+			pipeline.Run(ctx, pips.CastDChan[any, I](ctx, input)),
+			output,
+			func(_ context.Context, item O, out chan<- pips.D[any]) error {
+				out <- pips.AnyD(item)
+				return nil
+			},
+		)
+	}
 }

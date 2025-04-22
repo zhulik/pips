@@ -5,12 +5,10 @@ import (
 )
 
 // Stage is a unit of work in the pipeline.
-type Stage interface {
-	// Run should consume from the input channel and produce to the
-	// output channel. The stage must not close channels, must block.
-	// When using background routines: they must exit when the context is canceled or the input channel is closed.
-	Run(context.Context, <-chan D[any], chan<- D[any])
-}
+// Stage should consume from the input channel and produce to the
+// output channel. The stage must not close channels, must block.
+// When using background routines: they must exit when the context is canceled or the input channel is closed.
+type Stage func(context.Context, <-chan D[any], chan<- D[any])
 
 // Pipeline is a sequence of stages.
 type Pipeline[I any, O any] struct {
@@ -44,6 +42,6 @@ func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) OutChan[O] 
 }
 
 func (p *Pipeline[I, O]) runStage(ctx context.Context, stage Stage, in <-chan D[any], out chan<- D[any]) {
-	stage.Run(ctx, in, out)
+	stage(ctx, in, out)
 	close(out)
 }
