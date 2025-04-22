@@ -6,14 +6,16 @@ import (
 	"github.com/zhulik/pips"
 )
 
+type filter[T any] func(context.Context, T) (bool, error)
+
 type filterStage[T any] struct {
-	filter func(context.Context, T) (bool, error)
+	filter filter[T]
 }
 
 // Run filters items from the input channel and sends them to the output channel.
-func (s filterStage[I]) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
+func (s filterStage[T]) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
 	pips.MapToDChan(ctx, input, output, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
-		keep, err := s.filter(ctx, item.(I))
+		keep, err := s.filter(ctx, item.(T))
 		if err != nil {
 			return err
 		}
@@ -26,6 +28,6 @@ func (s filterStage[I]) Run(ctx context.Context, input <-chan pips.D[any], outpu
 }
 
 // Filter creates a filter stage.
-func Filter[I any](filter func(context.Context, I) (bool, error)) pips.Stage {
-	return filterStage[I]{filter}
+func Filter[T any](filter filter[T]) pips.Stage {
+	return filterStage[T]{filter}
 }

@@ -7,8 +7,10 @@ import (
 	"github.com/zhulik/pips"
 )
 
+type mapper[I any, O any] func(context.Context, I) (O, error)
+
 type mapStage[I any, O any] struct {
-	mapper func(context.Context, I) (O, error)
+	mapper mapper[I, O]
 }
 
 // Run maps items from the input channel and sends them to the output channel.
@@ -34,7 +36,7 @@ func (m mapStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any], outpu
 }
 
 // Map creates a map stage.
-func Map[I any, O any](mapper func(context.Context, I) (O, error)) pips.Stage {
+func Map[I any, O any](mapper mapper[I, O]) pips.Stage {
 	return mapStage[I, O]{mapper}
 }
 

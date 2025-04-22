@@ -7,8 +7,10 @@ import (
 	"github.com/zhulik/pips"
 )
 
-type eachStage[I any] struct {
-	eacher func(context.Context, I) error
+type eacher[T any] func(context.Context, T) error
+
+type eachStage[T any] struct {
+	eacher eacher[T]
 }
 
 // Run maps items from the input channel and sends them to the output channel.
@@ -33,6 +35,6 @@ func (m eachStage[I]) Run(ctx context.Context, input <-chan pips.D[any], output 
 }
 
 // Each creates an each stage.
-func Each[I any](mapper func(context.Context, I) error) pips.Stage {
+func Each[I any](mapper eacher[I]) pips.Stage {
 	return eachStage[I]{mapper}
 }
