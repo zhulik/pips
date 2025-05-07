@@ -15,9 +15,9 @@ func Each[I any](eacher eacher[I]) pips.Stage {
 		pips.MapToDChan(ctx, input, output, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
 			var err error
 
-			if _, ok := item.([]any); ok {
+			if anys, ok := item.([]any); ok {
 				var x I
-				err = eacher(ctx, convertSlice[I](item.([]any), reflect.TypeOf(x).Elem()))
+				err = eacher(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem()))
 			} else {
 				err = eacher(ctx, item.(I))
 			}

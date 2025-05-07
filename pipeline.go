@@ -33,7 +33,7 @@ func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) OutChan[O] 
 	for _, stage := range p.stages {
 		newOut := make(chan D[any])
 
-		go p.runStage(ctx, stage, inChan, newOut)
+		go runStage(ctx, stage, inChan, newOut)
 
 		inChan = newOut
 	}
@@ -41,7 +41,7 @@ func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) OutChan[O] 
 	return CastDChan[any, O](ctx, inChan)
 }
 
-func (p *Pipeline[I, O]) runStage(ctx context.Context, stage Stage, in <-chan D[any], out chan<- D[any]) {
+func runStage(ctx context.Context, stage Stage, in <-chan D[any], out chan<- D[any]) {
 	stage(ctx, in, out)
 	close(out)
 }

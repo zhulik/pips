@@ -16,9 +16,9 @@ func Map[I any, O any](mapper mapper[I, O]) pips.Stage {
 			var res O
 			var err error
 
-			if _, ok := item.([]any); ok {
+			if anys, ok := item.([]any); ok {
 				var x I
-				res, err = mapper(ctx, convertSlice[I](item.([]any), reflect.TypeOf(x).Elem()))
+				res, err = mapper(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem()))
 			} else {
 				res, err = mapper(ctx, item.(I))
 			}
