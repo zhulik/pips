@@ -87,6 +87,7 @@ func MapToDChan[I any, O any](ctx context.Context, input <-chan D[I], output cha
 			}
 			if res.Error() != nil {
 				output <- ErrD[O](res.Error())
+				return
 			}
 
 			err := h(ctx, res.Value(), output)
