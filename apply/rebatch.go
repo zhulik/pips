@@ -21,6 +21,17 @@ func Rebatch[T any](batchSize int) pips.Stage {
 		defer sendReset()
 
 		pips.MapToDChan(ctx, input, output, func(_ context.Context, item any, _ chan<- pips.D[any]) error {
+			if anyItems, ok := item.([]any); ok {
+				for _, item := range anyItems {
+					buffer = append(buffer, item.(T))
+
+					if len(buffer) >= batchSize {
+						sendReset()
+					}
+				}
+				return nil
+			}
+
 			for _, item := range item.([]T) {
 				buffer = append(buffer, item)
 
