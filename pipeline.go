@@ -41,6 +41,24 @@ func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) OutChan[O] 
 	return CastDChan[any, O](ctx, inChan)
 }
 
+// ToStage turns the pipeline into a stage to be used in another pipeline.
+func (p *Pipeline[I, O]) ToStage() Stage {
+	return func(ctx context.Context, in <-chan D[any], out chan<- D[any]) {
+		for _, stage := range p.stages {
+			newOut := make(chan D[any])
+
+			go runStage(ctx, stage, in, newOut)
+
+			in = newOut
+		}
+
+		MapToDChan(ctx, in, out, func(_ context.Context, item any, out chan<- D[any]) error {
+			out <- NewD(item)
+			return nil
+		})
+	}
+}
+
 func runStage(ctx context.Context, stage Stage, in <-chan D[any], out chan<- D[any]) {
 	stage(ctx, in, out)
 	close(out)
