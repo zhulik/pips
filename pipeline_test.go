@@ -46,7 +46,7 @@ func TestPipeline_NoResult(t *testing.T) {
 	t.Parallel()
 
 	out := pips.New[any, any]().
-		Then(apply.Map[string, any](func(_ context.Context, _ string) (any, error) {
+		Then(apply.Map(func(_ context.Context, _ string) (any, error) {
 			return nil, nil
 		})).
 		Run(t.Context(), testhelpers.InputChan())
