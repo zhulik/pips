@@ -50,4 +50,14 @@ func TestMapC(t *testing.T) {
 
 		testhelpers.RequireErroredPiping(t, out, errTest)
 	})
+
+	t.Run("panic", func(t *testing.T) {
+		t.Parallel()
+
+		out := testhelpers.TestStage(t, apply.MapC(2, func(_ context.Context, _ string) (string, error) {
+			panic(errTest)
+		}))
+
+		testhelpers.RequireErroredPiping(t, out, errTest)
+	})
 }

@@ -10,7 +10,9 @@ go get github.com/zhulik/pips
 
 ## Features
 
-- Type-safe pipelines using Go generics
+- "Type-safety": pipelines using Go generics for stages, butp pips uses `any` to move you the from one stage to another,
+  so it's your responsibility to use the correct types. In case of a type casting error, an error will be sent 
+  to the pipeline.
 - Concurrent processing with goroutines
 - Error handling throughout the pipeline
 - Composable stages for common operations:

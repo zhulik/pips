@@ -20,7 +20,11 @@ func Map[I any, O any](mapper mapper[I, O]) pips.Stage {
 				var x I
 				res, err = mapper(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem()))
 			} else {
-				res, err = mapper(ctx, item.(I))
+				var i I
+				i, err = pips.TryCast[I](item)
+				if err == nil {
+					res, err = mapper(ctx, i)
+				}
 			}
 			if err != nil {
 				return err

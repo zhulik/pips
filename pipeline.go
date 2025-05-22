@@ -2,6 +2,7 @@ package pips
 
 import (
 	"context"
+	"fmt"
 )
 
 // Stage is a unit of work in the pipeline.
@@ -33,7 +34,7 @@ func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) OutChan[O] 
 	for _, stage := range p.stages {
 		newOut := make(chan D[any])
 
-		go runStage(ctx, stage, inChan, newOut)
+		go p.runStage(ctx, stage, inChan, newOut)
 
 		inChan = newOut
 	}
@@ -41,25 +42,23 @@ func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) OutChan[O] 
 	return CastDChan[any, O](ctx, inChan)
 }
 
-// ToStage turns the pipeline into a stage to be used in another pipeline.
-func (p *Pipeline[I, O]) ToStage() Stage {
-	return func(ctx context.Context, in <-chan D[any], out chan<- D[any]) {
-		for _, stage := range p.stages {
-			newOut := make(chan D[any])
+func (p *Pipeline[I, O]) runStage(ctx context.Context, stage Stage, in <-chan D[any], out chan<- D[any]) {
+	defer close(out)
+	defer RecoverPanicAndSendToPipeline(out)
 
-			go runStage(ctx, stage, in, newOut)
-
-			in = newOut
-		}
-
-		MapToDChan(ctx, in, out, func(_ context.Context, item any, out chan<- D[any]) error {
-			out <- NewD(item)
-			return nil
-		})
-	}
+	stage(ctx, in, out)
 }
 
-func runStage(ctx context.Context, stage Stage, in <-chan D[any], out chan<- D[any]) {
-	stage(ctx, in, out)
-	close(out)
+func RecoverPanicAndSendToPipeline[T any](out chan<- D[T]) {
+	if r := recover(); r != nil {
+		var err error
+
+		if e, ok := r.(error); ok {
+			err = fmt.Errorf("%w: %w", ErrPanicInStage, e)
+		} else {
+			err = fmt.Errorf("%w: %+v", ErrPanicInStage, r)
+		}
+
+		out <- ErrD[T](err)
+	}
 }

@@ -23,9 +23,16 @@ func MapC[I any, O any](concurrency int, mapper mapper[I, O]) pips.Stage {
 
 				go func() {
 					defer func() { <-semaphore }()
+					defer close(ch)
+					defer pips.RecoverPanicAndSendToPipeline(ch)
 
-					ch <- pips.NewD[any](mapper(ctx, item.(I)))
-					close(ch)
+					i, err := pips.TryCast[I](item)
+					if err != nil {
+						ch <- pips.ErrD[any](err)
+						return
+					}
+
+					ch <- pips.NewD[any](mapper(ctx, i))
 				}()
 
 				out <- pips.NewD(ch)
@@ -39,7 +46,10 @@ func MapC[I any, O any](concurrency int, mapper mapper[I, O]) pips.Stage {
 			case <-ctx.Done():
 				return ctx.Err()
 
-			case d := <-c:
+			case d, ok := <-c:
+				if !ok {
+					return nil
+				}
 				v, err := d.Unpack()
 				if err != nil {
 					return err
