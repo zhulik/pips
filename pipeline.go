@@ -44,20 +44,21 @@ func (p *Pipeline[I, O]) Run(ctx context.Context, input <-chan D[I]) OutChan[O] 
 
 func (p *Pipeline[I, O]) runStage(ctx context.Context, stage Stage, in <-chan D[any], out chan<- D[any]) {
 	defer close(out)
-
-	defer func() {
-		if r := recover(); r != nil {
-			var err error
-
-			if e, ok := r.(error); ok {
-				err = fmt.Errorf("%w: %w", ErrPanicInStage, e)
-			} else {
-				err = fmt.Errorf("%w: %+v", ErrPanicInStage, r)
-			}
-
-			out <- ErrD[any](err)
-		}
-	}()
+	defer RecoverPanicAndSendToPipeline(out)
 
 	stage(ctx, in, out)
+}
+
+func RecoverPanicAndSendToPipeline[T any](out chan<- D[T]) {
+	if r := recover(); r != nil {
+		var err error
+
+		if e, ok := r.(error); ok {
+			err = fmt.Errorf("%w: %w", ErrPanicInStage, e)
+		} else {
+			err = fmt.Errorf("%w: %+v", ErrPanicInStage, r)
+		}
+
+		out <- ErrD[T](err)
+	}
 }
