@@ -1,5 +1,7 @@
 package pips
 
+import "fmt"
+
 // D is a pair of value and error, represents a piece of data in the pipeline.
 type D[T any] interface {
 	Unpack() (T, error)
@@ -34,7 +36,12 @@ func CastD[I any, O any](d D[I]) D[O] {
 		var t O
 		return NewD(t)
 	}
-	return NewD(v.(O))
+	o, ok := v.(O)
+	if !ok {
+		var t O
+		return ErrD[O](fmt.Errorf("%w: expected: %T, given: %T", ErrWrongType, t, v))
+	}
+	return NewD(o)
 }
 
 type pd[T any] struct {

@@ -8,14 +8,14 @@ import (
 	"github.com/zhulik/pips"
 )
 
-func InputChan() <-chan pips.D[any] {
-	ch := make(chan pips.D[any])
+func InputChan() <-chan pips.D[string] {
+	ch := make(chan pips.D[string])
 
 	go func() {
-		ch <- pips.AnyD("test")
-		ch <- pips.AnyD("foo")
-		ch <- pips.AnyD("bazz")
-		ch <- pips.AnyD("train")
+		ch <- pips.NewD("test")
+		ch <- pips.NewD("foo")
+		ch <- pips.NewD("bazz")
+		ch <- pips.NewD("train")
 		close(ch)
 	}()
 
@@ -59,6 +59,8 @@ func RequireSuccessfulPiping[T any](t *testing.T, out pips.OutChan[T], expected 
 }
 
 func RequireErroredPiping[T any](t *testing.T, out pips.OutChan[T], expected error) {
+	t.Helper()
+
 	_, err := out.Collect(t.Context())
 
 	require.ErrorIs(t, err, expected)

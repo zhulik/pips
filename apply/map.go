@@ -2,6 +2,7 @@ package apply
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/zhulik/pips"
@@ -20,7 +21,13 @@ func Map[I any, O any](mapper mapper[I, O]) pips.Stage {
 				var x I
 				res, err = mapper(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem()))
 			} else {
-				res, err = mapper(ctx, item.(I))
+				i, ok := item.(I)
+				if ok {
+					res, err = mapper(ctx, i)
+				} else {
+					var x I
+					err = fmt.Errorf("%w: expected: %T, given: %T", pips.ErrWrongType, x, item)
+				}
 			}
 			if err != nil {
 				return err

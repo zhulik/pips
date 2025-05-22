@@ -30,7 +30,7 @@ var (
 func TestPipeline_Result(t *testing.T) {
 	t.Parallel()
 
-	out := pips.New[any, int]().
+	out := pips.New[string, int]().
 		Then(subPipe).
 		Then(lenMap).
 		Then(apply.Batch[int](3)).
@@ -45,11 +45,59 @@ func TestPipeline_Result(t *testing.T) {
 func TestPipeline_NoResult(t *testing.T) {
 	t.Parallel()
 
-	out := pips.New[any, any]().
+	out := pips.New[string, any]().
 		Then(apply.Map(func(_ context.Context, _ string) (any, error) {
 			return nil, nil
 		})).
 		Run(t.Context(), testhelpers.InputChan())
 
 	testhelpers.RequireSuccessfulPiping(t, out, []any{nil, nil, nil, nil})
+}
+
+func TestPipeline_StageError(t *testing.T) {
+	t.Parallel()
+
+	out := pips.New[string, any]().
+		Then(apply.Map(func(_ context.Context, _ string) (any, error) {
+			return nil, errTest
+		})).
+		Run(t.Context(), testhelpers.InputChan())
+
+	testhelpers.RequireErroredPiping(t, out, errTest)
+}
+
+func TestPipeline_StagePanic(t *testing.T) {
+	t.Parallel()
+
+	out := pips.New[string, any]().
+		Then(apply.Map(func(_ context.Context, _ string) (any, error) {
+			panic(errTest)
+		})).
+		Run(t.Context(), testhelpers.InputChan())
+
+	testhelpers.RequireErroredPiping(t, out, errTest)
+}
+
+func TestPipeline_StageOutputTypeCastingError(t *testing.T) {
+	t.Parallel()
+
+	out := pips.New[string, string]().
+		Then(apply.Map(func(_ context.Context, _ string) (int, error) {
+			return 0, nil
+		})).
+		Run(t.Context(), testhelpers.InputChan())
+
+	testhelpers.RequireErroredPiping(t, out, pips.ErrWrongType)
+}
+
+func TestPipeline_StageInputTypeCastingError(t *testing.T) {
+	t.Parallel()
+
+	out := pips.New[string, string]().
+		Then(apply.Map(func(_ context.Context, _ int) (string, error) {
+			return "", nil
+		})).
+		Run(t.Context(), testhelpers.InputChan())
+
+	testhelpers.RequireErroredPiping(t, out, pips.ErrWrongType)
 }
