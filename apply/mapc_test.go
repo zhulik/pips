@@ -2,6 +2,7 @@ package apply_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,7 +18,7 @@ func TestMapC(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		t.Parallel()
 
-		out := testhelpers.TestStage(t, apply.MapC(2, func(_ context.Context, s string) (string, error) {
+		out := testhelpers.TestStringStage(t, apply.MapC(2, func(_ context.Context, s string) (string, error) {
 			return s + s, nil
 		}))
 
@@ -31,7 +32,7 @@ func TestMapC(t *testing.T) {
 
 		delay := 200 * time.Millisecond
 
-		out := testhelpers.TestStage(t, apply.MapC(4, func(_ context.Context, s string) (string, error) {
+		out := testhelpers.TestStringStage(t, apply.MapC(4, func(_ context.Context, s string) (string, error) {
 			time.Sleep(delay)
 			return s + s, nil
 		}))
@@ -41,10 +42,20 @@ func TestMapC(t *testing.T) {
 		require.WithinDuration(t, start, time.Now(), delay+time.Millisecond*10)
 	})
 
+	t.Run("array", func(t *testing.T) {
+		t.Parallel()
+
+		out := testhelpers.TestArrayStage(t, apply.MapC(2, func(_ context.Context, s []string) (string, error) {
+			return strings.Join(s, " "), nil
+		}))
+
+		testhelpers.RequireSuccessfulPiping(t, out, []any{"a a", "b b", "c c", "d d"})
+	})
+
 	t.Run("error", func(t *testing.T) {
 		t.Parallel()
 
-		out := testhelpers.TestStage(t, apply.MapC(2, func(_ context.Context, _ string) (string, error) {
+		out := testhelpers.TestStringStage(t, apply.MapC(2, func(_ context.Context, _ string) (string, error) {
 			return "", errTest
 		}))
 
@@ -54,7 +65,7 @@ func TestMapC(t *testing.T) {
 	t.Run("panic", func(t *testing.T) {
 		t.Parallel()
 
-		out := testhelpers.TestStage(t, apply.MapC(2, func(_ context.Context, _ string) (string, error) {
+		out := testhelpers.TestStringStage(t, apply.MapC(2, func(_ context.Context, _ string) (string, error) {
 			panic(errTest)
 		}))
 

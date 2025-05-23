@@ -22,10 +22,16 @@ func InputChan() <-chan pips.D[string] {
 	return ch
 }
 
-func TestStage(t *testing.T, stage pips.Stage) <-chan pips.D[any] {
+func TestStringStage(t *testing.T, stage pips.Stage) <-chan pips.D[any] {
 	t.Helper()
 
 	return TestStageWith(t, stage, []any{"test", "foo", "bazz", "train"})
+}
+
+func TestArrayStage(t *testing.T, stage pips.Stage) <-chan pips.D[any] {
+	t.Helper()
+
+	return TestStageWith(t, stage, []any{[]any{"a", "a"}, []any{"b", "b"}, []any{"c", "c"}, []any{"d", "d"}})
 }
 
 func TestStageWith(t *testing.T, stage pips.Stage, items []any) <-chan pips.D[any] {

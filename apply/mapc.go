@@ -2,6 +2,7 @@ package apply
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/zhulik/pips"
 )
@@ -26,13 +27,18 @@ func MapC[I any, O any](concurrency int, mapper mapper[I, O]) pips.Stage {
 					defer close(ch)
 					defer pips.RecoverPanicAndSendToPipeline(ch)
 
-					i, err := pips.TryCast[I](item)
-					if err != nil {
-						ch <- pips.ErrD[any](err)
-						return
-					}
+					if anys, ok := item.([]any); ok {
+						var x I
+						ch <- pips.NewD[any](mapper(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem())))
+					} else {
+						i, err := pips.TryCast[I](item)
+						if err != nil {
+							ch <- pips.ErrD[any](err)
+							return
+						}
 
-					ch <- pips.NewD[any](mapper(ctx, i))
+						ch <- pips.NewD[any](mapper(ctx, i))
+					}
 				}()
 
 				out <- pips.NewD(ch)

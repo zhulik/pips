@@ -15,7 +15,7 @@ func TestZip(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		t.Parallel()
 
-		out := testhelpers.TestStage(t, apply.Zip(func(_ context.Context, s string) (string, error) {
+		out := testhelpers.TestStringStage(t, apply.Zip(func(_ context.Context, s string) (string, error) {
 			return s + s, nil
 		}))
 
@@ -33,7 +33,7 @@ func TestZip(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		t.Parallel()
 
-		out := testhelpers.TestStage(t, apply.Zip(func(_ context.Context, _ string) (string, error) {
+		out := testhelpers.TestStringStage(t, apply.Zip(func(_ context.Context, _ string) (string, error) {
 			return "", errTest
 		}))
 

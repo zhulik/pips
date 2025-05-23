@@ -14,7 +14,7 @@ func TestFilter(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		t.Parallel()
 
-		out := testhelpers.TestStage(t, apply.Filter(func(_ context.Context, s string) (bool, error) {
+		out := testhelpers.TestStringStage(t, apply.Filter(func(_ context.Context, s string) (bool, error) {
 			return len(s) > 3, nil
 		}))
 		testhelpers.RequireSuccessfulPiping(t, out, []any{"test", "bazz", "train"})
@@ -23,7 +23,7 @@ func TestFilter(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		t.Parallel()
 
-		out := testhelpers.TestStage(t, apply.Filter(func(_ context.Context, _ string) (bool, error) {
+		out := testhelpers.TestStringStage(t, apply.Filter(func(_ context.Context, _ string) (bool, error) {
 			return true, errTest
 		}))
 
