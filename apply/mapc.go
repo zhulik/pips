@@ -2,6 +2,7 @@ package apply
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/zhulik/pips"
@@ -33,6 +34,7 @@ func MapC[I any, O any](concurrency int, mapper mapper[I, O]) pips.Stage {
 					} else {
 						i, err := pips.TryCast[I](item)
 						if err != nil {
+							err = fmt.Errorf("failed to cast mapc stage input: %w", err)
 							ch <- pips.ErrD[any](err)
 							return
 						}

@@ -2,6 +2,7 @@ package apply
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 
 	"github.com/zhulik/pips"
@@ -22,9 +23,10 @@ func Map[I any, O any](mapper mapper[I, O]) pips.Stage {
 			} else {
 				var i I
 				i, err = pips.TryCast[I](item)
-				if err == nil {
-					res, err = mapper(ctx, i)
+				if err != nil {
+					return fmt.Errorf("failed to cast map stage input: %w", err)
 				}
+				res, err = mapper(ctx, i)
 			}
 			if err != nil {
 				return err
