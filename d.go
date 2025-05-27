@@ -7,8 +7,8 @@ type D[T any] interface {
 	Error() error
 }
 
-func AnyD[T any](value T) D[any] {
-	return NewD[any](value)
+func AnyD[T any](value T, err ...error) D[any] {
+	return NewD[any](value, err...)
 }
 
 func NewD[T any](value T, err ...error) D[T] {
