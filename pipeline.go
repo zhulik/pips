@@ -3,6 +3,8 @@ package pips
 import (
 	"context"
 	"fmt"
+	"log/slog"
+	"runtime/debug"
 )
 
 // Stage is a unit of work in the pipeline.
@@ -51,6 +53,13 @@ func (p *Pipeline[I, O]) runStage(ctx context.Context, stage Stage, in <-chan D[
 
 func RecoverPanicAndSendToPipeline[T any](out chan<- D[T]) {
 	if r := recover(); r != nil {
+		stackTrace := debug.Stack()
+		slog.Error(
+			string(stackTrace),
+			"message", "A panic occurred during pips stage execution. The panic is recovered and sent to the pipeline as an error.",
+			"error", r,
+		)
+
 		var err error
 
 		if e, ok := r.(error); ok {
