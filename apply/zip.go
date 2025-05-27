@@ -14,17 +14,22 @@ func Zip[I any, O any](zipper mapper[I, O]) pips.Stage {
 			var res O
 			var err error
 
+			castItem, err := pips.TryCast[I](item)
+			if err != nil {
+				return err
+			}
+
 			if anys, ok := item.([]any); ok {
 				var x I
 				res, err = zipper(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem()))
 			} else {
-				res, err = zipper(ctx, item.(I))
+				res, err = zipper(ctx, castItem)
 			}
 			if err != nil {
 				return err
 			}
 
-			out <- pips.AnyD(pips.NewP(item.(I), res))
+			out <- pips.AnyD(pips.NewP(castItem, res))
 
 			return nil
 		})

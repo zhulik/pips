@@ -35,7 +35,7 @@ func TestPipeline_Result(t *testing.T) {
 		Then(lenMap).
 		Then(apply.Batch(3)).
 		Then(nothingMap).
-		Then(apply.Flatten[int]()).
+		Then(apply.Flatten()).
 		Then(gt6Filter).
 		Run(t.Context(), testhelpers.InputChan())
 

@@ -2,13 +2,14 @@ package apply
 
 import (
 	"context"
+	"reflect"
 	"time"
 
 	"github.com/zhulik/pips"
 )
 
 // Rebatch creates a rebatching stage.
-func Rebatch[T any](batchSize int, configurer ...BatchConfigurer) pips.Stage {
+func Rebatch(batchSize int, configurer ...BatchConfigurer) pips.Stage {
 	config := &BatchConfig{}
 	for _, c := range configurer {
 		c(config)
@@ -58,27 +59,26 @@ func Rebatch[T any](batchSize int, configurer ...BatchConfigurer) pips.Stage {
 					return
 				}
 
-				item := res.Value()
-
-				if anyItems, ok := item.([]any); ok {
-					for _, item := range anyItems {
-						buffer = append(buffer, item)
-
-						if len(buffer) >= batchSize {
-							sendReset()
-						}
-					}
-					continue
-				}
-
-				for _, item := range item.([]T) {
+				iterateAnySlice(res.Value(), func(item any) {
 					buffer = append(buffer, item)
 
 					if len(buffer) >= batchSize {
 						sendReset()
 					}
-				}
+				})
 			}
 		}
 	}
+}
+
+func iterateAnySlice(item any, fn func(any)) {
+	if reflect.TypeOf(item).Kind() == reflect.Slice {
+		s := reflect.ValueOf(item)
+		for i := 0; i < s.Len(); i++ {
+			fn(s.Index(i).Interface())
+		}
+		return
+	}
+
+	panic("not a slice")
 }

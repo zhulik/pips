@@ -25,9 +25,9 @@ func BenchmarkPipelineWith3NoOpMappingSteps(b *testing.B) {
 	pipeline := pips.New[int, int]().
 		Then(noOpMap).
 		Then(apply.Batch(10)).
-		Then(apply.Rebatch[int](30)).
+		Then(apply.Rebatch(30)).
 		Then(noOpBatchMap).
-		Then(apply.Flatten[int]()).
+		Then(apply.Flatten()).
 		Then(noOpMap)
 
 	out := pipeline.Run(context.Background(), input)
