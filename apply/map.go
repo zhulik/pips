@@ -2,7 +2,6 @@ package apply
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/zhulik/pips"
@@ -14,25 +13,7 @@ type mapper[I any, O any] func(context.Context, I) (O, error)
 func Map[I any, O any](mapper mapper[I, O]) pips.Stage {
 	return func(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
 		pips.MapToDChan(ctx, input, output, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
-			var res O
-			var err error
-
-			if anys, ok := item.([]any); ok {
-				var x I
-				res, err = mapper(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem()))
-			} else {
-				var i I
-				i, err = pips.TryCast[I](item)
-				if err != nil {
-					return fmt.Errorf("failed to cast map stage input: %w", err)
-				}
-				res, err = mapper(ctx, i)
-			}
-			if err != nil {
-				return err
-			}
-
-			out <- pips.AnyD(res)
+			out <- pips.AnyD(mapItemOrSlice(ctx, item, mapper))
 
 			return nil
 		})
@@ -55,4 +36,32 @@ func convertSlice[T any](sourceSlice []any, targetElementType reflect.Type) T {
 	}
 
 	return targetSlice.Interface().(T)
+}
+
+func iterateAnySlice(item any, fn func(any)) {
+	if reflect.TypeOf(item).Kind() == reflect.Slice {
+		s := reflect.ValueOf(item)
+		for i := 0; i < s.Len(); i++ {
+			fn(s.Index(i).Interface())
+		}
+		return
+	}
+
+	panic("not a slice")
+}
+
+func mapItemOrSlice[I any, O any](ctx context.Context, item any, mapper mapper[I, O]) (O, error) {
+	var i I
+
+	if anys, ok := item.([]any); ok {
+		return mapper(ctx, convertSlice[I](anys, reflect.TypeOf(i).Elem()))
+	}
+
+	i, err := pips.TryCast[I](item)
+	if err != nil {
+		var o O
+		return o, err
+	}
+
+	return mapper(ctx, i)
 }

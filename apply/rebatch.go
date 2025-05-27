@@ -2,7 +2,6 @@ package apply
 
 import (
 	"context"
-	"reflect"
 	"time"
 
 	"github.com/zhulik/pips"
@@ -69,16 +68,4 @@ func Rebatch(batchSize int, configurer ...BatchConfigurer) pips.Stage {
 			}
 		}
 	}
-}
-
-func iterateAnySlice(item any, fn func(any)) {
-	if reflect.TypeOf(item).Kind() == reflect.Slice {
-		s := reflect.ValueOf(item)
-		for i := 0; i < s.Len(); i++ {
-			fn(s.Index(i).Interface())
-		}
-		return
-	}
-
-	panic("not a slice")
 }

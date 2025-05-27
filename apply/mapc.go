@@ -2,8 +2,6 @@ package apply
 
 import (
 	"context"
-	"fmt"
-	"reflect"
 
 	"github.com/zhulik/pips"
 )
@@ -28,19 +26,7 @@ func MapC[I any, O any](concurrency int, mapper mapper[I, O]) pips.Stage {
 					defer close(ch)
 					defer pips.RecoverPanicAndSendToPipeline(ch)
 
-					if anys, ok := item.([]any); ok {
-						var x I
-						ch <- pips.AnyD(mapper(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem())))
-					} else {
-						i, err := pips.TryCast[I](item)
-						if err != nil {
-							err = fmt.Errorf("failed to cast mapc stage input: %w", err)
-							ch <- pips.ErrD[any](err)
-							return
-						}
-
-						ch <- pips.AnyD(mapper(ctx, i))
-					}
+					ch <- pips.AnyD(mapItemOrSlice(ctx, item, mapper))
 				}()
 
 				out <- pips.NewD(ch)
@@ -48,7 +34,6 @@ func MapC[I any, O any](concurrency int, mapper mapper[I, O]) pips.Stage {
 				return nil
 			})
 		}()
-
 		pips.MapToDChan(ctx, midChan, output, func(ctx context.Context, c chan pips.D[any], out chan<- pips.D[any]) error {
 			select {
 			case <-ctx.Done():
@@ -58,12 +43,7 @@ func MapC[I any, O any](concurrency int, mapper mapper[I, O]) pips.Stage {
 				if !ok {
 					return nil
 				}
-				v, err := d.Unpack()
-				if err != nil {
-					return err
-				}
-
-				out <- pips.NewD(v)
+				out <- d
 				return nil
 			}
 		})

@@ -34,11 +34,7 @@ func CastD[I any, O any](d D[I]) D[O] {
 		var t O
 		return NewD(t)
 	}
-	o, err := TryCast[O](v)
-	if err != nil {
-		return ErrD[O](err)
-	}
-	return NewD(o)
+	return NewD(TryCast[O](v))
 }
 
 type pd[T any] struct {
