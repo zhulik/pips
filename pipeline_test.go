@@ -33,7 +33,7 @@ func TestPipeline_Result(t *testing.T) {
 	out := pips.New[string, int]().
 		Then(subPipe).
 		Then(lenMap).
-		Then(apply.Batch[int](3)).
+		Then(apply.Batch(3)).
 		Then(nothingMap).
 		Then(apply.Flatten[int]()).
 		Then(gt6Filter).
