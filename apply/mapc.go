@@ -29,7 +29,7 @@ func MapC[I any, O any](concurrency int, mapper mapper[I, O]) pips.Stage {
 
 					if anys, ok := item.([]any); ok {
 						var x I
-						ch <- pips.NewD[any](mapper(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem())))
+						ch <- pips.AnyD(mapper(ctx, convertSlice[I](anys, reflect.TypeOf(x).Elem())))
 					} else {
 						i, err := pips.TryCast[I](item)
 						if err != nil {
@@ -37,7 +37,7 @@ func MapC[I any, O any](concurrency int, mapper mapper[I, O]) pips.Stage {
 							return
 						}
 
-						ch <- pips.NewD[any](mapper(ctx, i))
+						ch <- pips.AnyD(mapper(ctx, i))
 					}
 				}()
 

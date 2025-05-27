@@ -12,7 +12,7 @@ func Flatten[T any]() pips.Stage {
 		pips.MapToDChan(ctx, input, output, func(_ context.Context, item any, out chan<- pips.D[any]) error {
 			if anyItems, ok := item.([]any); ok {
 				for _, item := range anyItems {
-					out <- pips.AnyD(item.(T))
+					out <- pips.AnyD(item)
 				}
 				return nil
 			}

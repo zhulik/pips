@@ -62,7 +62,7 @@ func Rebatch[T any](batchSize int, configurer ...BatchConfigurer) pips.Stage {
 
 				if anyItems, ok := item.([]any); ok {
 					for _, item := range anyItems {
-						buffer = append(buffer, item.(T))
+						buffer = append(buffer, item)
 
 						if len(buffer) >= batchSize {
 							sendReset()
