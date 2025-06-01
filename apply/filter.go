@@ -2,6 +2,7 @@ package apply
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/zhulik/pips"
 )
@@ -12,7 +13,12 @@ type filter[T any] func(context.Context, T) (bool, error)
 func Filter[T any](filter filter[T]) pips.Stage {
 	return func(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
 		pips.MapToDChan(ctx, input, output, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
-			keep, err := filter(ctx, item.(T))
+			i, err := pips.TryCast[T](item)
+			if err != nil {
+				return fmt.Errorf("failed to cast filter stage input: %w", err)
+			}
+
+			keep, err := filter(ctx, i)
 			if err != nil {
 				return err
 			}

@@ -8,9 +8,9 @@ import (
 )
 
 // Rebatch creates a rebatching stage.
-func Rebatch[T any](batchSize int, configurer ...BatchConfigurer) pips.Stage {
+func Rebatch(batchSize int, configurers ...BatchConfigurer) pips.Stage {
 	config := &BatchConfig{}
-	for _, c := range configurer {
+	for _, c := range configurers {
 		c(config)
 	}
 
@@ -58,26 +58,13 @@ func Rebatch[T any](batchSize int, configurer ...BatchConfigurer) pips.Stage {
 					return
 				}
 
-				item := res.Value()
-
-				if anyItems, ok := item.([]any); ok {
-					for _, item := range anyItems {
-						buffer = append(buffer, item.(T))
-
-						if len(buffer) >= batchSize {
-							sendReset()
-						}
-					}
-					continue
-				}
-
-				for _, item := range item.([]T) {
+				iterateAnySlice(res.Value(), func(item any) {
 					buffer = append(buffer, item)
 
 					if len(buffer) >= batchSize {
 						sendReset()
 					}
-				}
+				})
 			}
 		}
 	}

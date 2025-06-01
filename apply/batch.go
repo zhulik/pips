@@ -20,9 +20,9 @@ func WithFlushInterval(interval time.Duration) BatchConfigurer {
 type BatchConfigurer func(*BatchConfig)
 
 // Batch creates a batching stage.
-func Batch[T any](batchSize int, configurer ...BatchConfigurer) pips.Stage {
+func Batch(batchSize int, configurers ...BatchConfigurer) pips.Stage {
 	config := &BatchConfig{}
-	for _, c := range configurer {
+	for _, c := range configurers {
 		c(config)
 	}
 

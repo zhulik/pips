@@ -7,8 +7,8 @@ type D[T any] interface {
 	Error() error
 }
 
-func AnyD[T any](value T) D[any] {
-	return NewD[any](value)
+func AnyD[T any](value T, err ...error) D[any] {
+	return NewD[any](value, err...)
 }
 
 func NewD[T any](value T, err ...error) D[T] {
@@ -34,11 +34,7 @@ func CastD[I any, O any](d D[I]) D[O] {
 		var t O
 		return NewD(t)
 	}
-	o, err := TryCast[O](v)
-	if err != nil {
-		return ErrD[O](err)
-	}
-	return NewD(o)
+	return NewD(TryCast[O](v))
 }
 
 type pd[T any] struct {

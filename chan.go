@@ -50,10 +50,11 @@ func MapInputChan[I any, O any](ctx context.Context, ch <-chan I, f func(context
 	input := make(chan D[O])
 
 	go func() {
+		defer close(input)
+
 		for r := range ch {
 			input <- NewD(f(ctx, r))
 		}
-		close(input)
 	}()
 
 	return input
