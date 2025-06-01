@@ -8,9 +8,9 @@ import (
 )
 
 // Rebatch creates a rebatching stage.
-func Rebatch(batchSize int, configurer ...BatchConfigurer) pips.Stage {
+func Rebatch(batchSize int, configurers ...BatchConfigurer) pips.Stage {
 	config := &BatchConfig{}
-	for _, c := range configurer {
+	for _, c := range configurers {
 		c(config)
 	}
 
