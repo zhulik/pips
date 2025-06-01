@@ -9,14 +9,23 @@ import (
 
 type mapper[I any, O any] func(context.Context, I) (O, error)
 
+type MapperStage[I any, O any] struct {
+	mapper mapper[I, O]
+}
+
+// Run runs the stage.
+func (m MapperStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
+	pips.MapToDChan(ctx, input, output, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
+		out <- pips.AnyD(mapItemOrSlice(ctx, item, m.mapper))
+
+		return nil
+	})
+}
+
 // Map creates a map stage.
 func Map[I any, O any](mapper mapper[I, O]) pips.Stage {
-	return func(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
-		pips.MapToDChan(ctx, input, output, func(ctx context.Context, item any, out chan<- pips.D[any]) error {
-			out <- pips.AnyD(mapItemOrSlice(ctx, item, mapper))
-
-			return nil
-		})
+	return MapperStage[I, O]{
+		mapper: mapper,
 	}
 }
 
