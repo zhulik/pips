@@ -13,9 +13,7 @@ type PipelineConfig[I any, O any] struct {
 // PipelineStage represents a pipeline stage that embeds another pipeline.
 // It allows for composition of pipelines, where one pipeline can be used as a stage within another pipeline.
 // It takes items of type I as input and emits items of type O as output, using the embedded pipeline for processing.
-type PipelineStage[I any, O any] struct {
-	config PipelineConfig[I, O]
-}
+type PipelineStage[I any, O any] Stage[PipelineConfig[I, O]]
 
 // Run runs the stage.
 // It processes input data by passing it to the embedded pipeline and then forwarding

@@ -18,9 +18,7 @@ type MapperFn[I any, O any] func(context.Context, I) (O, error)
 
 // MapperStage represents a pipeline stage that transforms items using a MapperFn function.
 // It takes items of type I as input and emits items of type O as output.
-type MapperStage[I any, O any] struct {
-	config MapConfig[I, O]
-}
+type MapperStage[I any, O any] Stage[MapConfig[I, O]]
 
 // Run runs the stage.
 // It processes input data by applying the MapperFn function to each item

@@ -10,9 +10,7 @@ import (
 // RebatchStage represents a pipeline stage that rebatches data from existing batches into new batches.
 // It takes batches (slices) as input, flattens them, and then creates new batches of the specified size.
 // This is useful when you need to change the batch size in the middle of a pipeline.
-type RebatchStage struct {
-	config BatchConfig
-}
+type RebatchStage Stage[BatchConfig]
 
 // Run runs the stage.
 // It processes input data by taking batches (slices), flattening them into individual items,

@@ -14,9 +14,7 @@ type MapCConfig[I any, O any] struct {
 // MapCStage represents a pipeline stage that transforms items using a MapperFn function with concurrency.
 // It takes items of type I as input and emits items of type O as output,
 // processing multiple items simultaneously up to the specified concurrency limit.
-type MapCStage[I any, O any] struct {
-	config MapCConfig[I, O]
-}
+type MapCStage[I any, O any] Stage[MapCConfig[I, O]]
 
 // Run runs the stage.
 // It processes input data by applying the MapperFn function to each item concurrently,

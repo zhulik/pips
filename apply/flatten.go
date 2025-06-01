@@ -8,7 +8,7 @@ import (
 
 // FlattenStage represents a pipeline stage that flattens slices or arrays into individual items.
 // It takes slices or arrays as input and emits each element as a separate item in the pipeline.
-type FlattenStage struct{}
+type FlattenStage Stage[any]
 
 // Run runs the stage.
 // It processes input data by taking slices or arrays and emitting each element

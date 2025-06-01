@@ -18,9 +18,7 @@ type FilterFn[T any] func(context.Context, T) (bool, error)
 
 // FilterStage represents a pipeline stage that filters items based on a predicate function.
 // It passes only items that satisfy the FilterFn condition to the next stage.
-type FilterStage[T any] struct {
-	config FilterConfig[T]
-}
+type FilterStage[T any] Stage[FilterConfig[T]]
 
 // Run runs the stage.
 // It processes input data by applying the FilterFn function to each item and only passing

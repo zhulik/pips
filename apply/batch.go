@@ -32,9 +32,7 @@ type BatchConfigurer func(*BatchConfig)
 // BatchStage represents a pipeline stage that buffers data into batches based on size or flush interval.
 // It collects individual items into batches and emits them when either the batch size is reached
 // or the flush interval has elapsed.
-type BatchStage struct {
-	config BatchConfig
-}
+type BatchStage Stage[BatchConfig]
 
 // Run runs the stage.
 // It processes input data by collecting items into batches and sending them to the output channel
