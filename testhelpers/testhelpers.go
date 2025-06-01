@@ -48,7 +48,7 @@ func TestStageWith(t *testing.T, stage pips.Stage, items []any) <-chan pips.D[an
 
 	out := make(chan pips.D[any])
 	go func() {
-		stage(t.Context(), ch, out)
+		stage.Run(t.Context(), ch, out)
 		close(out)
 	}()
 

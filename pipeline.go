@@ -11,7 +11,9 @@ import (
 // Stage should consume from the input channel and produce to the
 // output channel. The stage must not close channels, must block.
 // When using background routines: they must exit when the context is canceled or the input channel is closed.
-type Stage func(context.Context, <-chan D[any], chan<- D[any])
+type Stage interface {
+	Run(context.Context, <-chan D[any], chan<- D[any])
+}
 
 // Pipeline is a sequence of stages.
 type Pipeline[I any, O any] struct {
@@ -48,7 +50,7 @@ func (p *Pipeline[I, O]) runStage(ctx context.Context, stage Stage, in <-chan D[
 	defer close(out)
 	defer RecoverPanicAndSendToPipeline(out)
 
-	stage(ctx, in, out)
+	stage.Run(ctx, in, out)
 }
 
 func RecoverPanicAndSendToPipeline[T any](out chan<- D[T]) {
