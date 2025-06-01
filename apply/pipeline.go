@@ -6,11 +6,15 @@ import (
 	"github.com/zhulik/pips"
 )
 
+type PipelineConfig[I any, O any] struct {
+	Pipeline *pips.Pipeline[I, O]
+}
+
 // PipelineStage represents a pipeline stage that embeds another pipeline.
 // It allows for composition of pipelines, where one pipeline can be used as a stage within another pipeline.
 // It takes items of type I as input and emits items of type O as output, using the embedded pipeline for processing.
 type PipelineStage[I any, O any] struct {
-	pipeline *pips.Pipeline[I, O]
+	config PipelineConfig[I, O]
 }
 
 // Run runs the stage.
@@ -20,7 +24,7 @@ type PipelineStage[I any, O any] struct {
 func (p PipelineStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
 	pips.MapToDChan(
 		ctx,
-		p.pipeline.Run(ctx, pips.CastDChan[any, I](ctx, input)),
+		p.config.Pipeline.Run(ctx, pips.CastDChan[any, I](ctx, input)),
 		output,
 		func(_ context.Context, item O, out chan<- pips.D[any]) error {
 			out <- pips.AnyD(item)
@@ -37,6 +41,6 @@ func (p PipelineStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any], 
 // that can be composed together to form more complex processing flows.
 func Pipeline[I any, O any](pipeline *pips.Pipeline[I, O]) pips.Stage {
 	return PipelineStage[I, O]{
-		pipeline: pipeline,
+		config: PipelineConfig[I, O]{Pipeline: pipeline},
 	}
 }

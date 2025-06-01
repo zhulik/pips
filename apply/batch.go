@@ -12,6 +12,7 @@ import (
 type BatchConfig struct {
 	// FlushInterval defines the maximum time to wait before flushing a batch,
 	// even if the batch size hasn't been reached.
+	BatchSize     int
 	FlushInterval time.Duration
 }
 
@@ -32,15 +33,14 @@ type BatchConfigurer func(*BatchConfig)
 // It collects individual items into batches and emits them when either the batch size is reached
 // or the flush interval has elapsed.
 type BatchStage struct {
-	batchSize int
-	config    *BatchConfig
+	config BatchConfig
 }
 
 // Run runs the stage.
 // It processes input data by collecting items into batches and sending them to the output channel
 // when either the batch size is reached or the flush interval has elapsed.
 func (b BatchStage) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
-	buffer := make([]any, 0, b.batchSize)
+	buffer := make([]any, 0, b.config.BatchSize)
 
 	var flushTicker *time.Ticker
 	var tickChan <-chan time.Time
@@ -56,7 +56,7 @@ func (b BatchStage) Run(ctx context.Context, input <-chan pips.D[any], output ch
 	sendReset := func() {
 		if len(buffer) > 0 {
 			output <- pips.AnyD(buffer)
-			buffer = make([]any, 0, b.batchSize)
+			buffer = make([]any, 0, b.config.BatchSize)
 			if flushTicker != nil {
 				flushTicker.Reset(b.config.FlushInterval)
 			}
@@ -85,7 +85,7 @@ func (b BatchStage) Run(ctx context.Context, input <-chan pips.D[any], output ch
 
 			buffer = append(buffer, res.Value())
 
-			if len(buffer) >= b.batchSize {
+			if len(buffer) >= b.config.BatchSize {
 				sendReset()
 			}
 		}
@@ -97,13 +97,14 @@ func (b BatchStage) Run(ctx context.Context, input <-chan pips.D[any], output ch
 // The batchSize parameter determines the maximum number of items in each batch.
 // Optional configurers can be provided to customize the batching behavior, such as setting a flush interval.
 func Batch(batchSize int, configurers ...BatchConfigurer) pips.Stage {
-	config := &BatchConfig{}
+	config := &BatchConfig{
+		BatchSize: batchSize,
+	}
 	for _, c := range configurers {
 		c(config)
 	}
 
 	return BatchStage{
-		batchSize: batchSize,
-		config:    config,
+		config: *config,
 	}
 }

@@ -12,7 +12,7 @@ import (
 // It takes items of type I as input and emits pairs (pips.P) of the original item and the transformed item.
 // This is useful when you need to keep the original item along with its transformed version
 // for later processing or reference.
-func Zip[I any, O any](zipper mapper[I, O]) pips.Stage {
+func Zip[I any, O any](zipper MapperFn[I, O]) pips.Stage {
 	return Map(func(ctx context.Context, i I) (pips.P[I, O], error) {
 		o, err := zipper(ctx, i)
 		if err != nil {

@@ -11,8 +11,7 @@ import (
 // It takes batches (slices) as input, flattens them, and then creates new batches of the specified size.
 // This is useful when you need to change the batch size in the middle of a pipeline.
 type RebatchStage struct {
-	batchSize int
-	config    *BatchConfig
+	config BatchConfig
 }
 
 // Run runs the stage.
@@ -20,7 +19,7 @@ type RebatchStage struct {
 // and then collecting those items into new batches of the specified size.
 // Like BatchStage, it also supports flushing batches based on a time interval.
 func (r RebatchStage) Run(ctx context.Context, input <-chan pips.D[any], output chan<- pips.D[any]) {
-	buffer := make([]any, 0, r.batchSize)
+	buffer := make([]any, 0, r.config.BatchSize)
 
 	var flushTicker *time.Ticker
 	var tickChan <-chan time.Time
@@ -36,7 +35,7 @@ func (r RebatchStage) Run(ctx context.Context, input <-chan pips.D[any], output 
 	sendReset := func() {
 		if len(buffer) > 0 {
 			output <- pips.AnyD(buffer)
-			buffer = make([]any, 0, r.batchSize)
+			buffer = make([]any, 0, r.config.BatchSize)
 			if flushTicker != nil {
 				flushTicker.Reset(r.config.FlushInterval)
 			}
@@ -66,7 +65,7 @@ func (r RebatchStage) Run(ctx context.Context, input <-chan pips.D[any], output 
 			iterateAnySlice(res.Value(), func(item any) {
 				buffer = append(buffer, item)
 
-				if len(buffer) >= r.batchSize {
+				if len(buffer) >= r.config.BatchSize {
 					sendReset()
 				}
 			})
@@ -82,13 +81,14 @@ func (r RebatchStage) Run(ctx context.Context, input <-chan pips.D[any], output 
 // This is useful when you need to change the batch size in the middle of a pipeline,
 // or when you need to process batches from an upstream source but with a different batch size.
 func Rebatch(batchSize int, configurers ...BatchConfigurer) pips.Stage {
-	config := &BatchConfig{}
+	config := &BatchConfig{
+		BatchSize: batchSize,
+	}
 	for _, c := range configurers {
 		c(config)
 	}
 
 	return RebatchStage{
-		batchSize: batchSize,
-		config:    config,
+		config: *config,
 	}
 }
