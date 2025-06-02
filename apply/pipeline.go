@@ -40,5 +40,6 @@ func (p PipelineStage[I, O]) Run(ctx context.Context, input <-chan pips.D[any], 
 func Pipeline[I any, O any](pipeline *pips.Pipeline[I, O]) pips.Stage {
 	return PipelineStage[I, O]{
 		config: PipelineConfig[I, O]{Pipeline: pipeline},
+		source: getStageSource(),
 	}
 }

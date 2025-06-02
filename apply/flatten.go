@@ -27,5 +27,7 @@ func (f FlattenStage) Run(ctx context.Context, input <-chan pips.D[any], output 
 // This is useful when you have a pipeline that produces collections of items, but you want to process
 // each item individually in subsequent stages.
 func Flatten() pips.Stage {
-	return FlattenStage{}
+	return FlattenStage{
+		source: getStageSource(),
+	}
 }

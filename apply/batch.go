@@ -104,5 +104,6 @@ func Batch(batchSize int, configurers ...BatchConfigurer) pips.Stage {
 
 	return BatchStage{
 		config: *config,
+		source: getStageSource(),
 	}
 }

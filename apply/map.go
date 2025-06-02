@@ -2,7 +2,10 @@ package apply
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"runtime"
+	"strings"
 
 	"github.com/zhulik/pips"
 )
@@ -41,6 +44,7 @@ func Map[I any, O any](mapper MapperFn[I, O]) pips.Stage {
 		config: MapConfig[I, O]{
 			Mapper: mapper,
 		},
+		source: getStageSource(),
 	}
 }
 
@@ -94,4 +98,34 @@ func mapItemOrSlice[I any, O any](ctx context.Context, item any, mapper MapperFn
 	}
 
 	return mapper(ctx, i)
+}
+
+func getStageSource() string {
+	pc := make([]uintptr, 10)
+	n := runtime.Callers(2, pc)
+	if n == 0 {
+		return ""
+	}
+
+	pc = pc[:n]
+	frames := runtime.CallersFrames(pc)
+
+	for {
+		frame, more := frames.Next()
+		if !more {
+			break
+		}
+
+		parts := strings.Split(frame.Function, ".")
+		if len(parts) < 2 {
+			continue
+		}
+
+		pkgPath := strings.Join(parts[:len(parts)-1], ".")
+		if !strings.Contains(pkgPath, "pips") {
+			return fmt.Sprintf("%s:%d", frame.File, frame.Line)
+		}
+	}
+
+	return ""
 }

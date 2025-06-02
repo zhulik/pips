@@ -88,5 +88,6 @@ func Rebatch(batchSize int, configurers ...BatchConfigurer) pips.Stage {
 
 	return RebatchStage{
 		config: *config,
+		source: getStageSource(),
 	}
 }

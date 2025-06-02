@@ -52,5 +52,6 @@ func Filter[T any](filter FilterFn[T]) pips.Stage {
 		config: FilterConfig[T]{
 			Filter: filter,
 		},
+		source: getStageSource(),
 	}
 }

@@ -73,5 +73,6 @@ func MapC[I any, O any](concurrency int, mapper MapperFn[I, O]) pips.Stage {
 			Concurrency: concurrency,
 			Mapper:      mapper,
 		},
+		source: getStageSource(),
 	}
 }
